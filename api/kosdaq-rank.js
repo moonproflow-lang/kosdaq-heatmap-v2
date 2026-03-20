@@ -1,149 +1,40 @@
-// 코스닥 상위 100 종목 고정 목록 (네이버 금융 기준 2026.03.20)
-// Yahoo Finance에서 실시간 시총을 받아 순위 자동 재정렬
-
-const KOSDAQ_UNIVERSE = [
-  {code:'000250',name:'삼천당제약'},
-  {code:'196170',name:'알테오젠'},
-  {code:'277810',name:'레인보우로보틱스'},
-  {code:'259960',name:'크래프톤'},
-  {code:'323410',name:'카카오뱅크'},
-  {code:'247540',name:'에코프로비엠'},
-  {code:'086520',name:'에코프로'},
-  {code:'028300',name:'HLB'},
-  {code:'352820',name:'하이브'},
-  {code:'036570',name:'엔씨소프트'},
-  {code:'091990',name:'셀트리온헬스케어'},
-  {code:'141080',name:'리가켐바이오'},
-  {code:'000100',name:'유한양행'},
-  {code:'377300',name:'카카오페이'},
-  {code:'068760',name:'셀트리온제약'},
-  {code:'403870',name:'HPSP'},
-  {code:'214150',name:'클래시스'},
-  {code:'022100',name:'포스코DX'},
-  {code:'041510',name:'SM'},
-  {code:'000990',name:'DB하이텍'},
-  {code:'145020',name:'휴젤'},
-  {code:'066970',name:'엘앤에프'},
-  {code:'278470',name:'에이피알'},
-  {code:'263750',name:'펄어비스'},
-  {code:'035900',name:'JYP Ent.'},
-  {code:'328130',name:'루닛'},
-  {code:'035760',name:'CJ ENM'},
-  {code:'293490',name:'카카오게임즈'},
-  {code:'278280',name:'천보'},
-  {code:'058470',name:'리노공업'},
-  {code:'357780',name:'솔브레인'},
-  {code:'122870',name:'와이지엔터'},
-  {code:'253450',name:'스튜디오드래곤'},
-  {code:'257540',name:'실리콘투'},
-  {code:'214450',name:'파마리서치'},
-  {code:'140860',name:'파크시스템스'},
-  {code:'039030',name:'이오테크닉스'},
-  {code:'095340',name:'ISC'},
-  {code:'085310',name:'넥스틴'},
-  {code:'086900',name:'메디톡스'},
-  {code:'241710',name:'코스메카코리아'},
-  {code:'240810',name:'원익IPS'},
-  {code:'098460',name:'고영'},
-  {code:'420940',name:'기가비스'},
-  {code:'178320',name:'서진시스템'},
-  {code:'089970',name:'테크윙'},
-  {code:'192080',name:'더블유게임즈'},
-  {code:'008930',name:'한미사이언스'},
-  {code:'222800',name:'심텍'},
-  {code:'007660',name:'이수페타시스'},
-  {code:'112040',name:'위메이드'},
-  {code:'078340',name:'컴투스'},
-  {code:'096530',name:'씨젠'},
-  {code:'067630',name:'HLB생명과학'},
-  {code:'032500',name:'케이엠더블유'},
-  {code:'170900',name:'동아에스티'},
-  {code:'095660',name:'네오위즈'},
-  {code:'005290',name:'동진쎄미켐'},
-  {code:'319660',name:'피에스케이'},
-  {code:'445680',name:'큐로셀'},
-  {code:'338220',name:'뷰노'},
-  {code:'090460',name:'비에이치'},
-  {code:'067310',name:'하나마이크론'},
-  {code:'033240',name:'자화전자'},
-  {code:'218410',name:'RFHIC'},
-  {code:'083450',name:'GST'},
-  {code:'041960',name:'코미팜'},
-  {code:'299660',name:'셀리드'},
-  {code:'222080',name:'씨아이에스'},
-  {code:'378340',name:'필에너지'},
-  {code:'053980',name:'오상헬스케어'},
-  {code:'150900',name:'파수'},
-  {code:'259630',name:'엠플러스'},
-  {code:'322510',name:'제이엘케이'},
-  {code:'079370',name:'제우스'},
-  {code:'064290',name:'인텍플러스'},
-  {code:'097800',name:'윈팩'},
-  {code:'252990',name:'샘씨엔에스'},
-  {code:'330860',name:'네패스아크'},
-  // 61~100위 추가
-  {code:'002790',name:'아모레퍼시픽'},
-  {code:'271560',name:'오리온'},
-  {code:'302440',name:'SK바이오사이언스'},
-  {code:'196490',name:'에이비엘바이오'},
-  {code:'950130',name:'엑세스바이오'},
-  {code:'237690',name:'에스티팜'},
-  {code:'048260',name:'오스템임플란트'},
-  {code:'145150',name:'비엠티'},
-  {code:'060310',name:'3S'},
-  {code:'039020',name:'이건산업'},
-  {code:'950140',name:'잉글우드랩'},
-  {code:'226400',name:'오스코텍'},
-  {code:'145020',name:'휴젤'},
-  {code:'067310',name:'하나마이크론'},
-  {code:'036670',name:'파트론'},
-  {code:'086900',name:'메디톡스'},
-  {code:'290020',name:'카카오페이'},
-  {code:'035810',name:'이지홀딩스'},
-  {code:'119860',name:'SK바이오팜'},
-  {code:'272210',name:'한화시스템'},
-  {code:'060280',name:'큐렉소'},
-];
-
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Cache-Control', 'public, max-age=300');
 
-  // Yahoo Finance에서 시총 배치 조회 (한 번에 20개씩)
-  const results = [];
-  const CHUNK = 20;
-  const headers = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-    'Accept': 'application/json',
-  };
-
   try {
-    for (let i = 0; i < KOSDAQ_UNIVERSE.length; i += CHUNK) {
-      const batch = KOSDAQ_UNIVERSE.slice(i, i + CHUNK);
-      const tickers = batch.map(s => s.code + '.KQ').join(',');
-      const url = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${tickers}&fields=marketCap,regularMarketPrice,regularMarketChangePercent`;
-
-      try {
-        const r = await fetch(url, { headers });
-        if (!r.ok) continue;
-        const j = await r.json();
-        const quotes = j?.quoteResponse?.result || [];
-        for (const q of quotes) {
-          const code = q.symbol.replace('.KQ', '');
-          const stock = KOSDAQ_UNIVERSE.find(s => s.code === code);
-          if (!stock) continue;
-          results.push({
-            code,
-            name: stock.name,
-            marketCap: q.marketCap || 0,
-          });
-        }
-      } catch { continue; }
+    // 네이버 증권 모바일 API - 코스닥 시가총액 순위
+    const results = [];
+    
+    for (let page = 1; page <= 4; page++) {
+      const url = `https://m.stock.naver.com/api/stocks/marketValue/KOSDAQ?page=${page}&pageSize=25`;
+      const r = await fetch(url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1',
+          'Accept': 'application/json',
+          'Referer': 'https://m.stock.naver.com/',
+        },
+      });
+      if (!r.ok) throw new Error(`네이버 모바일 API ${r.status}`);
+      const j = await r.json();
+      
+      // 응답 구조 파악
+      const stocks = j?.stocks || j?.result?.stocks || j?.data || [];
+      if (!stocks.length) throw new Error('응답 구조: ' + JSON.stringify(j).slice(0,200));
+      
+      for (const s of stocks) {
+        results.push({
+          code: s.itemCode || s.code || s.stockCode,
+          name: s.stockName || s.name || s.itemName,
+          marketCap: Number(s.marketValue || s.marketCap || s.marketvalue || 0),
+        });
+      }
     }
 
-    // 시총 기준 내림차순 정렬
-    const sorted = results
-      .filter(d => d.marketCap > 0)
+    if (!results.length) throw new Error('파싱 결과 없음');
+
+    const list = results
+      .filter(d => d.code && d.marketCap > 0)
       .sort((a, b) => b.marketCap - a.marketCap)
       .slice(0, 100)
       .map((d, i) => ({
@@ -154,21 +45,10 @@ export default async function handler(req, res) {
         capStr: formatCap(d.marketCap),
       }));
 
-    if (!sorted.length) throw new Error('Yahoo 시총 조회 실패');
-
-    return res.status(200).json({
-      list: sorted,
-      date: new Date().toISOString().slice(0, 10),
-      source: 'yahoo',
-      total: sorted.length,
-    });
+    return res.status(200).json({ list, date: new Date().toISOString().slice(0,10), source: 'naver-mobile' });
 
   } catch (e) {
-    return res.status(200).json({
-      list: getFallback(),
-      date: 'fallback',
-      warning: e.message,
-    });
+    return res.status(200).json({ list: getFallback(), date: 'fallback', warning: e.message });
   }
 }
 
