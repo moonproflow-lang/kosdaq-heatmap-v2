@@ -146,4 +146,4 @@ function getFallback() {
     rank: i+1, code: d.code, name: d.name,
     marketCap: d.cap * 1e8, capStr: formatCap(d.cap * 1e8),
   }));
-} 
+}
